@@ -1,0 +1,1886 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Para Sharon 🖤</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700;900&family=Great+Vibes&family=Playfair+Display:ital@0;1&display=swap"
+        rel="stylesheet">
+    <style>
+        *,
+        *::before,
+        *::after {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            background-color: #020002 !important;
+            overflow: hidden;
+            font-family: 'Cinzel Decorative', serif;
+            height: 100vh;
+            width: 100vw;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transition: background 2s;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        /* ============================================ */
+        /* --- ROOM OVERLAY / AMBIENT LIGHTING ---      */
+        /* ============================================ */
+        #room-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle at 50% 20%, rgba(20, 0, 0, 0.98) 0%, #000 100%);
+            z-index: 10;
+            transition: opacity 2s ease, background 2s ease;
+            pointer-events: none;
+        }
+
+        body.lights-on #room-overlay {
+            background: radial-gradient(circle at 50% 8%,
+                    rgba(255, 220, 100, 0.15) 0%,
+                    rgba(255, 180, 60, 0.05) 15%,
+                    transparent 35%,
+                    rgba(30, 0, 5, 0.85) 70%,
+                    #000 100%);
+        }
+
+        /* Ocultar todo de Fase 1 al entrar en Fase 2 */
+        body.phase-2 #room-overlay,
+        body.phase-2 .lamp-container,
+        body.phase-2 .scene-container,
+        body.phase-2 .hint {
+            opacity: 0 !important;
+            transition: opacity 1.5s ease;
+            pointer-events: none;
+        }
+
+        /* Ocultar Fase 2 en Fase 3 */
+        body.phase-3 #roseCanvas,
+        body.phase-3 .photo-container,
+        body.phase-3 .phase2-text,
+        body.phase-3 .btn-final,
+        body.phase-3 .petal-container {
+            opacity: 0 !important;
+            transition: opacity 1.5s ease;
+            pointer-events: none;
+        }
+
+        /* ============================================ */
+        /* --- FASE 1: LÁMPARA ---                      */
+        /* ============================================ */
+        .lamp-container {
+            position: absolute;
+            top: -20px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 20;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            transition: opacity 1s;
+        }
+
+        .wire {
+            width: 4px;
+            height: 80px;
+            background: linear-gradient(to bottom, #1a1a1a, #333);
+            border-radius: 2px;
+        }
+
+        .bulb-socket {
+            width: 42px;
+            height: 42px;
+            background: linear-gradient(to bottom, #444, #222);
+            border-radius: 5px;
+            box-shadow: inset 0 2px 4px rgba(255, 255, 255, 0.05);
+        }
+
+        .bulb {
+            width: 65px;
+            height: 65px;
+            background: radial-gradient(circle at 40% 35%, #555, #333);
+            border-radius: 50%;
+            margin-top: -12px;
+            transition: all 0.3s;
+            position: relative;
+            z-index: 2;
+            box-shadow: inset 0 -5px 10px rgba(0, 0, 0, 0.3);
+        }
+
+        .bulb.on {
+            background: radial-gradient(circle at 40% 35%, #fffef0, #fffacd) !important;
+            box-shadow:
+                0 0 60px rgba(255, 250, 205, 1),
+                0 0 150px rgba(255, 220, 100, 0.8),
+                0 0 300px rgba(255, 200, 50, 0.3),
+                inset 0 0 20px rgba(255, 255, 255, 0.5) !important;
+        }
+
+        .pull-string-area {
+            width: 50px;
+            height: 160px;
+            /* Área de clic ampliada */
+            display: flex;
+            justify-content: center;
+            cursor: pointer;
+            position: relative;
+            z-index: 25;
+        }
+
+        .pull-string {
+            width: 2px;
+            height: 130px;
+            background: linear-gradient(to bottom, #555, #777);
+            position: relative;
+            transform-origin: top;
+            pointer-events: none;
+        }
+
+        .pull-knob {
+            width: 16px;
+            height: 28px;
+            background: radial-gradient(circle at 40% 30%, #cc0000, #8b0000, #500000);
+            border-radius: 50% 50% 12% 12%;
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            box-shadow: 0 3px 8px rgba(0, 0, 0, 0.6), inset 0 1px 2px rgba(255, 255, 255, 0.15);
+        }
+
+        .pull-anim {
+            animation: pull 0.4s ease-in-out;
+        }
+
+        @keyframes pull {
+            0% {
+                transform: scaleY(1);
+            }
+
+            50% {
+                transform: scaleY(1.35);
+            }
+
+            100% {
+                transform: scaleY(1);
+            }
+        }
+
+        .hint {
+            position: absolute;
+            top: 260px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: rgba(120, 120, 120, 0.8);
+            font-size: 0.85rem;
+            z-index: 20;
+            pointer-events: none;
+            transition: opacity 0.8s ease;
+            font-family: 'Playfair Display', serif;
+            font-style: italic;
+            animation: hintPulse 2s ease-in-out infinite;
+            letter-spacing: 1px;
+        }
+
+        .hint.hidden {
+            opacity: 0 !important;
+            animation: none !important;
+        }
+
+        @keyframes hintPulse {
+
+            0%,
+            100% {
+                opacity: 0.4;
+            }
+
+            50% {
+                opacity: 0.9;
+            }
+        }
+
+        /* ============================================ */
+        /* --- FASE 1: ESCENA PASTEL/MESA ---           */
+        /* ============================================ */
+        .scene-container {
+            position: absolute;
+            bottom: 12%;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 5;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            filter: brightness(0.03) sepia(1) hue-rotate(320deg);
+            transition: filter 3s ease-in-out, opacity 1.5s;
+        }
+
+        body.lights-on .scene-container {
+            filter: brightness(1) sepia(0) hue-rotate(0deg);
+        }
+
+        .table {
+            width: 260px;
+            height: 16px;
+            background: linear-gradient(to right, #0d0505, #3d1e1e, #2a1010, #3d1e1e, #0d0505);
+            border-radius: 3px;
+            box-shadow: 0 12px 25px rgba(0, 0, 0, 0.9), inset 0 1px 1px rgba(255, 255, 255, 0.03);
+            position: relative;
+        }
+
+        .table-leg {
+            position: absolute;
+            top: 16px;
+            width: 10px;
+            height: 160px;
+            background: linear-gradient(to right, #0d0505, #1a0a0a, #0d0505);
+            border-radius: 0 0 3px 3px;
+        }
+
+        .leg-left {
+            left: 30px;
+            transform: rotate(5deg);
+        }
+
+        .leg-right {
+            right: 30px;
+            transform: rotate(-5deg);
+        }
+
+        .cake-pedestal {
+            width: 85px;
+            height: 12px;
+            background: linear-gradient(to bottom, #333, #1a1a1a);
+            margin-bottom: -6px;
+            border-radius: 50%;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.6);
+        }
+
+        .cake-heart {
+            position: relative;
+            width: 85px;
+            height: 75px;
+            margin-bottom: 10px;
+            filter: drop-shadow(0 5px 15px rgba(0, 0, 0, 0.6));
+            animation: none;
+        }
+
+        .cake-heart:before,
+        .cake-heart:after {
+            position: absolute;
+            content: "";
+            left: 42px;
+            top: 0;
+            width: 42px;
+            height: 68px;
+            background: linear-gradient(to bottom right, #c40000, #8b0000, #500000);
+            border-radius: 42px 42px 0 0;
+            transform: rotate(-45deg);
+            transform-origin: 0 100%;
+        }
+
+        .cake-heart:after {
+            left: 0;
+            transform: rotate(45deg);
+            transform-origin: 100% 100%;
+            background: linear-gradient(to bottom left, #c40000, #8b0000, #500000);
+        }
+
+        body.lights-on .cake-heart {
+            filter: drop-shadow(0 0 20px rgba(255, 0, 0, 0.5)) drop-shadow(0 0 40px rgba(139, 0, 0, 0.3));
+            transition: filter 3s;
+            animation: cakePulse 2s ease-in-out infinite 3s;
+        }
+
+        @keyframes cakePulse {
+
+            0%,
+            100% {
+                transform: scale(1);
+                filter: drop-shadow(0 0 20px rgba(255, 0, 0, 0.5));
+            }
+
+            50% {
+                transform: scale(1.05);
+                filter: drop-shadow(0 0 30px rgba(255, 0, 0, 0.7)) drop-shadow(0 0 50px rgba(139, 0, 0, 0.4));
+            }
+        }
+
+        /* ============================================ */
+        /* --- FASE 1: SOBRE / CARTA ---                */
+        /* ============================================ */
+        .envelope-container {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(0);
+            width: 320px;
+            height: 210px;
+            z-index: 30;
+            perspective: 1200px;
+            transition: transform 1s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.5s;
+            cursor: pointer;
+        }
+
+        .envelope-body {
+            position: absolute;
+            bottom: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #1a0000, #220000, #1a0000);
+            border: 2px solid #3a0505;
+            overflow: hidden;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.9), inset 0 0 30px rgba(139, 0, 0, 0.1);
+        }
+
+        .flap {
+            position: absolute;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(180deg, #350505, #2b0000);
+            clip-path: polygon(0 0, 50% 50%, 100% 0);
+            transform-origin: top;
+            transition: transform 0.8s ease, z-index 0.1s;
+            z-index: 5;
+        }
+
+        .flap.open {
+            transform: rotateX(180deg);
+            z-index: 1;
+        }
+
+        .envelope-side-left {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #2b0000, #1f0000);
+            clip-path: polygon(0 0, 50% 50%, 0 100%);
+            z-index: 3;
+        }
+
+        .envelope-side-right {
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(225deg, #2b0000, #1f0000);
+            clip-path: polygon(100% 0, 50% 50%, 100% 100%);
+            z-index: 3;
+        }
+
+        .pocket {
+            position: absolute;
+            bottom: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(to top, #1a0000, #2b0000);
+            clip-path: polygon(0 100%, 50% 50%, 100% 100%);
+            z-index: 4;
+        }
+
+        .seal {
+            position: absolute;
+            top: 38%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 45px;
+            height: 45px;
+            background: radial-gradient(circle at 40% 35%, #cc0000, #8b0000, #500000);
+            border-radius: 50%;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.7), inset 0 1px 3px rgba(255, 255, 255, 0.1);
+            z-index: 6;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Great Vibes', cursive;
+            color: #daa520;
+            font-size: 1.6rem;
+            transition: opacity 0.5s;
+            animation: sealPulse 2s ease-in-out infinite;
+            text-shadow: 0 0 5px rgba(218, 165, 32, 0.5);
+        }
+
+        @keyframes sealPulse {
+
+            0%,
+            100% {
+                box-shadow: 0 3px 10px rgba(0, 0, 0, 0.7), 0 0 0px rgba(139, 0, 0, 0);
+            }
+
+            50% {
+                box-shadow: 0 3px 10px rgba(0, 0, 0, 0.7), 0 0 20px rgba(139, 0, 0, 0.6);
+            }
+        }
+
+        .letter-paper {
+            position: absolute;
+            bottom: 10px;
+            left: 10px;
+            width: 296px;
+            height: 188px;
+            background: linear-gradient(135deg, #fdf5e6, #f5e6cc, #fdf5e6);
+            color: #1a0000;
+            padding: 20px;
+            box-sizing: border-box;
+            font-family: 'Playfair Display', serif;
+            font-size: 0.88rem;
+            text-align: center;
+            transition: transform 1s ease 0.5s, height 1s ease 0.5s;
+            z-index: 2;
+            box-shadow: 0 -5px 15px rgba(0, 0, 0, 0.15), inset 0 0 30px rgba(139, 0, 0, 0.03);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            line-height: 1.6;
+        }
+
+        .letter-paper.visible {
+            transform: translateY(-70px);
+            z-index: 10;
+            height: 320px;
+            box-shadow: 0 0 50px rgba(255, 215, 0, 0.3), 0 10px 60px rgba(0, 0, 0, 0.5);
+            transition: transform 1s ease 0.5s, height 1s ease 0.5s, box-shadow 1.5s ease 1s;
+            animation: letterGlow 4s infinite alternate 2s;
+        }
+
+        @keyframes letterGlow {
+            0% {
+                box-shadow: 0 0 40px rgba(255, 215, 0, 0.2), 0 10px 40px rgba(0, 0, 0, 0.3);
+            }
+
+            100% {
+                box-shadow: 0 0 70px rgba(255, 215, 0, 0.5), 0 10px 80px rgba(139, 0, 0, 0.2);
+            }
+        }
+
+        .letter-text {
+            opacity: 0;
+            transition: opacity 1s 1.5s;
+        }
+
+        .letter-text.show {
+            opacity: 1;
+        }
+
+        .letter-text h2 {
+            font-family: 'Great Vibes', cursive;
+            color: #8b0000;
+            font-size: 2.2rem;
+            margin: 0 0 10px 0;
+            text-shadow: 0 0 10px rgba(139, 0, 0, 0.2);
+        }
+
+        .letter-text p {
+            margin: 6px 0;
+            color: #2a0a0a;
+            font-style: italic;
+        }
+
+        .btn-next {
+            margin-top: 12px;
+            padding: 10px 28px;
+            background: linear-gradient(135deg, #8b0000, #660000);
+            color: #fdf5e6;
+            border: none;
+            font-family: 'Cinzel Decorative', serif;
+            cursor: pointer;
+            font-size: 0.75rem;
+            opacity: 0;
+            transition: opacity 1s 2s, transform 0.3s, box-shadow 0.3s;
+            border-radius: 3px;
+            letter-spacing: 1px;
+            box-shadow: 0 3px 15px rgba(139, 0, 0, 0.4);
+        }
+
+        .btn-next.show {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .btn-next:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 25px rgba(139, 0, 0, 0.6);
+            background: linear-gradient(135deg, #aa0000, #8b0000);
+        }
+
+        /* Flecha para pasar de página */
+        .btn-page-arrow {
+            position: absolute;
+            bottom: 8px;
+            right: 10px;
+            width: 32px;
+            height: 32px;
+            background: linear-gradient(135deg, #8b0000, #660000);
+            color: #daa520;
+            border: none;
+            border-radius: 50%;
+            font-size: 1rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+            transition: transform 0.3s, box-shadow 0.3s;
+            z-index: 15;
+            animation: arrowPulse 1.5s ease-in-out infinite;
+        }
+
+        .btn-page-arrow:hover {
+            transform: scale(1.15);
+            box-shadow: 0 4px 15px rgba(139, 0, 0, 0.6);
+        }
+
+        @keyframes arrowPulse {
+
+            0%,
+            100% {
+                box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+            }
+
+            50% {
+                box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4), 0 0 12px rgba(218, 165, 32, 0.5);
+            }
+        }
+
+        .page-indicator {
+            position: absolute;
+            bottom: 14px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-family: 'Cinzel Decorative', serif;
+            font-size: 0.55rem;
+            color: rgba(139, 0, 0, 0.4);
+            letter-spacing: 2px;
+        }
+
+        .letter-page-content {
+            transition: opacity 0.5s ease, transform 0.6s ease, filter 0.6s ease;
+        }
+
+        .letter-page-content.dissolving {
+            opacity: 0;
+            transform: scale(0.85) rotate(-2deg);
+            filter: blur(3px) brightness(1.5);
+        }
+
+        .letter-page-content.entering {
+            opacity: 0;
+            transform: scale(1.05) translateY(10px);
+            filter: blur(2px);
+        }
+
+        .paper-shake {
+            animation: paperShake 0.4s ease;
+        }
+
+        @keyframes paperShake {
+            0% {
+                transform: translateY(-70px);
+            }
+
+            25% {
+                transform: translateY(-70px) rotate(1deg);
+            }
+
+            50% {
+                transform: translateY(-70px) rotate(-1deg);
+            }
+
+            75% {
+                transform: translateY(-70px) rotate(0.5deg);
+            }
+
+            100% {
+                transform: translateY(-70px);
+            }
+        }
+
+        /* ============================================ */
+        /* --- FASE 2: ROSA + FOTOS + PÉTALOS ---       */
+        /* ============================================ */
+        #roseCanvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+            opacity: 0;
+            transition: opacity 2s;
+            pointer-events: none;
+        }
+
+        body.phase-2 #roseCanvas {
+            opacity: 1;
+        }
+
+        .photo-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 5;
+            overflow: hidden;
+            display: none;
+        }
+
+        body.phase-2 .photo-container {
+            display: block;
+        }
+
+        .falling-photo {
+            position: absolute;
+            top: -200px;
+            width: 130px;
+            height: 150px;
+            background: #fff;
+            padding: 6px 6px 28px 6px;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.6);
+            transform-origin: center;
+            opacity: 0;
+            border-radius: 2px;
+        }
+
+        .falling-photo img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            filter: sepia(0.2) contrast(1.1) saturate(1.1);
+            border-radius: 1px;
+        }
+
+        .petal-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 4;
+            overflow: hidden;
+            display: none;
+        }
+
+        body.phase-2 .petal-container {
+            display: block;
+        }
+
+        .falling-petal {
+            position: absolute;
+            top: -40px;
+            font-size: 1.8rem;
+            opacity: 0;
+            filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
+        }
+
+        .phase2-text {
+            position: fixed;
+            bottom: 12%;
+            width: 100%;
+            text-align: center;
+            color: #fff;
+            font-family: 'Great Vibes', cursive;
+            font-size: 2.8rem;
+            text-shadow: 0 0 15px rgba(139, 0, 0, 0.8), 0 0 40px rgba(139, 0, 0, 0.3);
+            opacity: 0;
+            transition: opacity 2s 2s;
+            z-index: 50;
+            pointer-events: none;
+            letter-spacing: 2px;
+        }
+
+        body.phase-2 .phase2-text {
+            opacity: 1;
+        }
+
+        .btn-final {
+            position: fixed;
+            bottom: 5%;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 12px 36px;
+            background: transparent;
+            border: 1px solid #8b0000;
+            color: #ff2020;
+            font-family: 'Cinzel Decorative', serif;
+            font-size: 1rem;
+            cursor: pointer;
+            opacity: 0;
+            transition: all 0.4s;
+            z-index: 100;
+            pointer-events: none;
+            letter-spacing: 2px;
+            text-shadow: 0 0 8px rgba(139, 0, 0, 0.5);
+        }
+
+        .btn-final:hover {
+            background: rgba(139, 0, 0, 0.9);
+            color: #fdf5e6;
+            box-shadow: 0 0 30px rgba(139, 0, 0, 0.6), inset 0 0 20px rgba(255, 0, 0, 0.1);
+            border-color: #ff0000;
+            text-shadow: none;
+        }
+
+        body.phase-2 .btn-final {
+            opacity: 1;
+            transition-delay: 6s;
+            pointer-events: auto;
+            animation: pulseGlow 2s infinite ease-in-out 6.5s;
+        }
+
+        @keyframes pulseGlow {
+
+            0%,
+            100% {
+                box-shadow: 0 0 10px rgba(255, 68, 68, 0.4);
+                transform: translateX(-50%) scale(1);
+            }
+
+            50% {
+                box-shadow: 0 0 40px rgba(255, 68, 68, 1), inset 0 0 15px rgba(255, 255, 255, 0.2);
+                transform: translateX(-50%) scale(1.08);
+                filter: brightness(1.2);
+            }
+        }
+
+        /* ============================================ */
+        /* --- FASE 3: CORAZÓN 3D ---                   */
+        /* ============================================ */
+        #heartCanvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 60;
+            opacity: 0;
+            transition: opacity 2s;
+            pointer-events: none;
+        }
+
+        body.phase-3 #heartCanvas {
+            opacity: 1;
+        }
+
+        .phase3-name {
+            position: fixed;
+            top: 18%;
+            width: 100%;
+            text-align: center;
+            font-family: 'Cinzel Decorative', serif;
+            font-size: 3.5rem;
+            font-weight: 900;
+            letter-spacing: 12px;
+            background: linear-gradient(180deg, #ffffff 0%, #ff4444 40%, #8b0000 70%, #300000 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            z-index: 70;
+            opacity: 0;
+            transition: opacity 2s 1s;
+            filter: drop-shadow(0 0 20px rgba(139, 0, 0, 0.4));
+            animation: shimmer 3s ease-in-out infinite 3s;
+        }
+
+        body.phase-3 .phase3-name {
+            opacity: 1;
+        }
+
+        @keyframes shimmer {
+
+            0%,
+            100% {
+                background: linear-gradient(180deg, #ffffff 0%, #ff4444 40%, #8b0000 70%, #300000 100%);
+                -webkit-background-clip: text;
+                background-clip: text;
+            }
+
+            50% {
+                background: linear-gradient(180deg, #ffd700 0%, #ff6666 40%, #cc0000 70%, #500000 100%);
+                -webkit-background-clip: text;
+                background-clip: text;
+            }
+        }
+
+        .phase3-msg {
+            position: fixed;
+            bottom: 10%;
+            width: 100%;
+            text-align: center;
+            font-family: 'Great Vibes', cursive;
+            font-size: 2rem;
+            color: rgba(139, 0, 0, 0.8);
+            z-index: 70;
+            letter-spacing: 3px;
+            opacity: 0;
+            transition: opacity 2s 2s;
+            text-shadow: 0 0 15px rgba(139, 0, 0, 0.3);
+        }
+
+        body.phase-3 .phase3-msg {
+            opacity: 1;
+        }
+
+        /* ============================================ */
+        /* --- STICKER DECORATION (Paginas & Lluvia) --- */
+        /* ============================================ */
+        /* Sticker en la página de la carta */
+        .page-sticker {
+            position: absolute;
+            bottom: 15px;
+            left: 15px;
+            /* Mover a la izquierda */
+            width: 70px;
+            height: 70px;
+            background-size: contain;
+            /* Ajuste para imagen individual */
+            background-repeat: no-repeat;
+            background-position: center;
+            opacity: 0.9;
+            filter: contrast(1.1) brightness(1.05);
+            /* Mejorar colores */
+            transform: rotate(-5deg) scale(1.15);
+            /* ZOOM visual */
+            mix-blend-mode: multiply;
+            /* Efecto "impreso" en el papel */
+            border-radius: 10px;
+            /* Bordes suaves */
+            animation: floatSticker 3s ease-in-out infinite;
+        }
+
+        @keyframes floatSticker {
+
+            0%,
+            100% {
+                transform: rotate(-5deg) scale(1.15) translateY(0);
+            }
+
+            50% {
+                transform: rotate(-3deg) scale(1.18) translateY(-4px);
+            }
+        }
+
+        /* Sticker cayendo ELIMINADO por rendimiento */
+
+        /* ============================================ */
+        /* --- CONFETTI CANVAS ---                      */
+        /* ============================================ */
+        canvas#confettiCanvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            pointer-events: none;
+            z-index: 25;
+            width: 100%;
+            height: 100%;
+        }
+
+
+        @keyframes twinkle {
+
+            0%,
+            100% {
+                opacity: 0;
+                transform: scale(0.5);
+            }
+
+            50% {
+                opacity: 0.8;
+                transform: scale(1.2);
+            }
+        }
+
+        @media (max-width: 600px) {
+            .envelope-container {
+                width: 260px;
+                height: 175px;
+            }
+
+            .letter-paper {
+                width: 240px;
+                height: 155px;
+                padding: 14px;
+                font-size: 0.75rem;
+            }
+
+            .letter-paper.visible {
+                transform: translateY(-60px);
+                height: 280px;
+            }
+
+            .letter-text h2 {
+                font-size: 1.6rem;
+            }
+
+            .btn-next {
+                padding: 7px 18px;
+                font-size: 0.7rem;
+            }
+
+            .hint {
+                top: 240px;
+                font-size: 0.75rem;
+            }
+
+            .scene-container {
+                bottom: 10%;
+                transform: translateX(-50%) scale(0.85);
+            }
+
+            .phase2-text {
+                font-size: 1.8rem;
+                bottom: 14%;
+                padding: 0 15px;
+            }
+
+            .btn-final {
+                padding: 10px 24px;
+                font-size: 0.85rem;
+            }
+
+            .phase3-name {
+                font-size: 2.2rem;
+                letter-spacing: 6px;
+                top: 12%;
+            }
+
+            .phase3-msg {
+                font-size: 1.4rem;
+                bottom: 8%;
+                padding: 0 20px;
+            }
+
+            .falling-photo {
+                width: 90px;
+                height: 105px;
+                padding: 4px 4px 18px 4px;
+            }
+
+
+        }
+
+        @media (max-width: 380px) {
+            .envelope-container {
+                width: 220px;
+                height: 150px;
+            }
+
+            .letter-paper {
+                width: 200px;
+                height: 130px;
+                font-size: 0.68rem;
+                padding: 10px;
+            }
+
+            .letter-paper.visible {
+                height: 250px;
+            }
+
+            .phase3-name {
+                font-size: 1.8rem;
+                letter-spacing: 4px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- === CAPA DE ILUMINACIÓN === -->
+    <div id="room-overlay"></div>
+
+    <!-- === FASE 1: LÁMPARA === -->
+    <div class="lamp-container">
+        <div class="wire"></div>
+        <div class="bulb-socket"></div>
+        <div class="bulb" id="bulb"></div>
+        <div class="pull-string-area" id="stringArea" onclick="pullSwitch()">
+            <div class="pull-string" id="string">
+                <div class="pull-knob"></div>
+            </div>
+        </div>
+    </div>
+    <div class="hint" id="hintText">Tira de la cuerda...</div>
+
+    <!-- === FASE 1: MESA + PASTEL === -->
+    <div class="scene-container">
+        <div class="cake-heart"></div>
+        <div class="cake-pedestal"></div>
+        <div class="table">
+            <div class="table-leg leg-left"></div>
+            <div class="table-leg leg-right"></div>
+        </div>
+    </div>
+
+    <!-- === FASE 1: SOBRE === -->
+    <div class="envelope-container" id="envelope" onclick="openLetter()">
+        <div class="flap" id="flap"></div>
+        <div class="envelope-side-left"></div>
+        <div class="envelope-side-right"></div>
+        <div class="pocket"></div>
+        <div class="seal" id="seal">S</div>
+        <div class="envelope-body"></div>
+        <div class="letter-paper" id="paper">
+            <div class="letter-text" id="letterContent">
+                <div class="letter-page-content" id="letterPageContent"></div>
+                <span class="page-indicator" id="pageIndicator"></span>
+            </div>
+        </div>
+    </div>
+
+    <!-- === FASE 2: ROSA + FOTOS === -->
+    <canvas id="roseCanvas"></canvas>
+    <div class="photo-container" id="photoContainer"></div>
+    <div class="petal-container" id="petalContainer"></div>
+    <div class="phase2-text" id="phase2Text">Gracias por coincidir en esta vida junto a mí... 🌹</div>
+    <button class="btn-final" id="btnFinal" onclick="goToPhase3()">Por Siempre ❤️</button>
+
+    <!-- === FASE 3: CORAZÓN 3D === -->
+    <canvas id="heartCanvas"></canvas>
+    <div class="phase3-name" id="phase3Name">SHARON</div>
+    <div class="phase3-msg" id="phase3Msg">Sharon, eres la luz que guía mi camino y del sueño que nunca espero
+        despertar.<br>¡Feliz 14 de Septiembre! 😘 ❤️</div>
+
+    <!-- === CONFETTI === -->
+    <canvas id="confettiCanvas"></canvas>
+
+    <!-- === CAT GIF ELIMINADO === -->
+
+
+
+    <script>
+        // ========================================
+        // ESTADO GLOBAL
+        // ========================================
+        let isLit = false;
+        let isOpen = false;
+
+        // =============================================
+        // 📸 FOTOS DE SHARON - ¡EDITA AQUÍ!
+        // =============================================
+        // CÓMO AÑADIR TUS FOTOS:
+        // 1. Coloca tus imágenes en la MISMA CARPETA que este archivo HTML
+        //    (por ejemplo: c:\Users\Familia\Desktop\PRUEBA\)
+        // 2. Reemplaza los links de abajo con el nombre del archivo.
+        //    Ejemplo: 'foto1.jpg'
+        // 3. Puedes poner CUANTAS QUIERAS, las fotos caen en ciclo infinito.
+        //    Recomendado: entre 5 y 20 fotos para buen efecto.
+        // 4. Formatos válidos: .jpg, .jpeg, .png, .webp, .gif
+        //
+        // EJEMPLO CON ARCHIVOS LOCALES:
+        //   const yourPhotos = [
+        //       'sharon1.jpg',
+        //       'recuerdo_playa.png',
+        //       'juntos_navidad.jpg',
+        //       'selfie.jpg',
+        //   ];
+        //
+        // =============================================
+        // 📸 FOTOS DE SHARON
+        // =============================================
+        const yourPhotos = [
+            'https://i.ibb.co/4Zqv41d5/1.jpg',
+            'https://i.ibb.co/jv8pTnpk/2.jpg',
+            'https://i.ibb.co/BHkbZyTF/3.jpg',
+            'https://i.ibb.co/zhjr8NtX/4.jpg',
+            'https://i.ibb.co/p6MyXPg0/5.jpg',
+            'https://i.ibb.co/kgmGkccK/6.jpg',
+            'https://i.ibb.co/pv7DQvWT/7.jpg',
+            'https://i.ibb.co/Qjbg4P2c/8.jpg'
+        ];
+
+        // ========================================
+        // FASE 1: LÁMPARA CON PARPADEO REALISTA
+        // ========================================
+        function pullSwitch() {
+            if (isLit) return;
+            isLit = true;
+
+            const string = document.getElementById('string');
+            const bulb = document.getElementById('bulb');
+            const hint = document.getElementById('hintText');
+
+            // Animación de tirón
+            string.classList.add('pull-anim');
+            setTimeout(() => string.classList.remove('pull-anim'), 400);
+
+            // Secuencia de parpadeo realista (como bombilla vieja)
+            const flicker = [
+                { delay: 250, bg: '#555', shadow: '0 0 5px rgba(255,250,200,0.2)' },
+                { delay: 400, bg: '#333', shadow: 'none' },
+                { delay: 550, bg: '#777', shadow: '0 0 15px rgba(255,250,200,0.3)' },
+                { delay: 650, bg: '#444', shadow: 'none' },
+                { delay: 800, bg: '#999', shadow: '0 0 25px rgba(255,200,50,0.5)' },
+                { delay: 900, bg: '#555', shadow: 'none' },
+                { delay: 1000, bg: '#bbb', shadow: '0 0 30px rgba(255,200,50,0.6)' },
+                { delay: 1050, bg: '#666', shadow: '0 0 5px rgba(255,200,50,0.1)' },
+            ];
+
+            flicker.forEach(f => {
+                setTimeout(() => {
+                    bulb.style.background = f.bg;
+                    bulb.style.boxShadow = f.shadow;
+                }, f.delay);
+            });
+
+            // Encendido final
+            setTimeout(() => {
+                bulb.classList.add('on');
+                document.body.classList.add('lights-on');
+                hint.classList.add('hidden');
+                fireConfetti();
+                startMelody(); // Iniciar melodía romántica
+
+
+                // Pausa de 5 segundos para admirar la escena antes de mostrar el sobre
+                setTimeout(() => {
+                    document.getElementById('envelope').style.transform = 'translate(-50%, -50%) scale(1)';
+                }, 5000);
+
+            }, 1200);
+        }
+
+        // ========================================
+        // CARTA MULTI-PÁGINA
+        // ========================================
+        const letterPages = [
+            {
+                title: 'Mi querida Sharon',
+                text: 'Sharon, este detalle te lo entrego con mucho amor. Desear\xeda vernos, pero lastimosamente es muy dif\xedcil. De igual manera, sin importar el d\xeda, mes o a\xf1o, t\xfa eres la persona m\xe1s importante en mi vida.',
+                stickerUrl: 'https://i.ibb.co/wFR4Ny1b/imagen-2026-02-11-225213636.png'
+            },
+            {
+                title: null,
+                text: 'Te quiero con todo mi coraz\xf3n y agradezco el d\xeda en que nos conocimos, y m\xe1s a\xfan el d\xeda en que confiaste en m\xed para ser tu amigo. Eres alguien muy significativa en mi vida y quiero que esto siga por siempre y para siempre.',
+                stickerUrl: 'https://i.ibb.co/G4KW3dkC/imagen-2026-02-11-225227907.png'
+            },
+            {
+                title: null,
+                text: 'Deseo verte bien y que siempre sigas adelante. Eres fuerte y s\xe9 que lo lograr\xe1s, y siempre me tendr\xe1s a tu lado como un amigo, pero m\xe1s como tu apoyo para lo que necesites.',
+                stickerUrl: 'https://i.ibb.co/pvGpmqDJ/imagen-2026-02-11-225243048.png'
+            },
+            {
+                title: null,
+                text: 'Nunca te juzgar\xe9, nunca te olvidar\xe9, nunca me molestar\xe9 contigo, pero m\xe1s importante, nunca dejar\xe9 de quererte y amarte. Nunca olvides la maravillosa y hermosa chica que eres. Yo s\xe9 que tendr\xe1s un futuro exitoso y saldr\xe1s adelante.',
+                stickerUrl: 'https://i.ibb.co/rKj2xZwp/imagen-2026-02-11-225256582.png'
+            },
+            {
+                title: null,
+                text: 'Con todo mi cari\xf1o y coraz\xf3n, espero disfrutes este regalo hasta que nos volvamos a encontrar.',
+                signature: 'PD: Con todo mi coraz\xf3n y amor, tu amigo Juan 💌💌',
+                stickerUrl: 'https://i.ibb.co/qLwnzKzH/imagen-2026-02-11-225320031.png'
+            }
+        ];
+
+        let currentPage = 0;
+
+        function renderLetterPage(pageIndex, animate) {
+            const container = document.getElementById('letterPageContent');
+            const indicator = document.getElementById('pageIndicator');
+            const page = letterPages[pageIndex];
+            const isLast = pageIndex === letterPages.length - 1;
+
+            // Build page HTML
+            let html = '';
+            if (page.title) {
+                html += `<h2 style="font-family:'Great Vibes',cursive; color:#8b0000; font-size:1.8rem; margin:0 0 8px 0; text-shadow:0 0 10px rgba(139,0,0,0.2);">${page.title}</h2>`;
+            }
+            html += `<p style="margin:6px 0; color:#2a0a0a; font-style:italic; font-size:0.78rem; line-height:1.55;">${page.text}</p>`;
+            if (page.signature) {
+                html += `<p style="margin:10px 0 0 0; color:#8b0000; font-family:'Great Vibes',cursive; font-size:1.1rem;">${page.signature}</p>`;
+            }
+
+            // --- AÑADIR STICKER A LA PÁGINA ---
+            // --- AÑADIR STICKER A LA PÁGINA ---
+            if (page.stickerUrl) {
+                html += `<div class="page-sticker" style="background-image: url('${page.stickerUrl}');"></div>`;
+            } else if (page.sticker) {
+                // FALLBACK sprites (por si acaso)
+                const posX = page.sticker.col * 25;
+                const posY = page.sticker.row * 33.333;
+                html += `<div class="page-sticker" style="background-image: url('https://i.ibb.co/8nTbpBzL/9.jpg'); background-size: 500% 400%; background-position: ${posX}% ${posY}%;"></div>`;
+            }
+
+            // Arrow or final button
+            if (isLast) {
+                html += `<button class="btn-next show" onclick="startPhase2(event)" style="margin-top:10px;">Ver Recuerdos \u2728</button>`;
+            } else {
+                html += `<button class="btn-page-arrow" onclick="nextLetterPage(event)" title="Siguiente">\u25B6</button>`;
+            }
+
+            indicator.textContent = `${pageIndex + 1} / ${letterPages.length}`;
+
+            if (animate) {
+                // Step 1: Dissolve current text with dramatic effect
+                container.classList.add('dissolving');
+
+                // Step 2: After dissolve, swap content and enter
+                setTimeout(() => {
+                    container.innerHTML = html;
+                    container.classList.remove('dissolving');
+                    container.classList.add('entering');
+
+                    // Step 3: Reveal new text
+                    requestAnimationFrame(() => {
+                        setTimeout(() => {
+                            container.classList.remove('entering');
+                        }, 50);
+                    });
+                }, 600);
+            } else {
+                container.innerHTML = html;
+            }
+        }
+
+        function nextLetterPage(e) {
+            e.stopPropagation();
+            if (currentPage >= letterPages.length - 1) return;
+
+            // Shake the paper for impact
+            const paper = document.getElementById('paper');
+            paper.classList.add('paper-shake');
+            setTimeout(() => paper.classList.remove('paper-shake'), 400);
+
+            // Big golden particle burst — 3 waves
+            const rect = paper.getBoundingClientRect();
+            const cx = rect.left + rect.width / 2;
+            const cy = rect.top + rect.height / 2;
+            createLetterParticles(cx, cy, rect.width, rect.height);
+            setTimeout(() => createLetterParticles(cx, cy, rect.width, rect.height), 150);
+            setTimeout(() => createLetterParticles(cx, cy, rect.width, rect.height), 300);
+
+            currentPage++;
+            renderLetterPage(currentPage, true);
+        }
+
+        function createLetterParticles(cx, cy, w, h) {
+            const colors = ['#daa520', '#ffd700', '#ffec8b', '#fff8dc', '#b8860b', '#f0c040'];
+            for (let i = 0; i < 55; i++) {
+                // Spread particles across the full letter area
+                const startX = cx + (Math.random() - 0.5) * w * 0.9;
+                const startY = cy + (Math.random() - 0.5) * h * 0.7;
+                const angle = Math.random() * Math.PI * 2;
+                const speed = Math.random() * 8 + 3;
+                particles.push({
+                    x: startX,
+                    y: startY,
+                    vx: Math.cos(angle) * speed * (0.5 + Math.random()),
+                    vy: Math.sin(angle) * speed * 0.7 + Math.random() * 4,
+                    size: Math.random() * 5 + 1.5,
+                    color: colors[Math.floor(Math.random() * colors.length)],
+                    life: 1,
+                    decay: 0.008 + Math.random() * 0.012,
+                    rotation: Math.random() * 360,
+                    rotSpeed: (Math.random() - 0.5) * 20
+                });
+            }
+        }
+
+        // ========================================
+        // FASE 1: ABRIR CARTA
+        // ========================================
+        function openLetter() {
+            if (!isLit || isOpen) return;
+            isOpen = true;
+            document.getElementById('seal').style.opacity = '0';
+            document.getElementById('flap').classList.add('open');
+            document.getElementById('paper').classList.add('visible');
+            document.getElementById('letterContent').classList.add('show');
+
+            // Render first page
+            currentPage = 0;
+            renderLetterPage(0, false);
+        }
+
+        // ========================================
+        // FASE 2: TRANSICIÓN ELEGANTE
+        // ========================================
+        function startPhase2(e) {
+            e.stopPropagation();
+
+            const env = document.getElementById('envelope');
+
+            // Explosión de partículas rojas/doradas
+            createExplosion(window.innerWidth / 2, window.innerHeight / 2 + 50);
+
+            // Animación de "latido final" + desaparición
+            env.style.transition = 'transform 0.5s, opacity 0.5s';
+            env.style.transform = 'translate(-50%, -50%) scale(1.2)';
+            env.style.opacity = '0';
+            setTimeout(() => { env.style.display = 'none'; }, 600);
+
+            // Activar Fase 2
+            setTimeout(() => {
+                document.body.classList.add('phase-2');
+                document.body.style.backgroundColor = '#020002';
+
+                initRose();
+                animateRose();
+                startDroppingPhotos();
+                startDroppingPetals();
+                // startDroppingStickers() ELIMINADO
+            }, 400);
+        }
+
+        // ========================================
+        // FASE 3: TRANSICIÓN AL CORAZÓN 3D
+        // ========================================
+        function goToPhase3() {
+            document.body.classList.add('phase-3');
+            initHeart3D();
+            animateHeart3D();
+        }
+
+        // ========================================
+        // CONFETTI & PARTÍCULAS
+        // ========================================
+        const confettiCanvas = document.getElementById('confettiCanvas');
+        const confettiCtx = confettiCanvas.getContext('2d');
+        confettiCanvas.width = window.innerWidth;
+        confettiCanvas.height = window.innerHeight;
+        let particles = [];
+
+        function fireConfetti() {
+            const colors = ['#ffd700', '#daa520', '#ff4444', '#8b0000', '#fdf5e6'];
+            for (let i = 0; i < 120; i++) {
+                particles.push({
+                    x: window.innerWidth / 2,
+                    y: 120,
+                    vx: (Math.random() - 0.5) * 18,
+                    vy: (Math.random() - 0.5) * 18 + 5,
+                    size: Math.random() * 6 + 2,
+                    color: colors[Math.floor(Math.random() * colors.length)],
+                    life: 1,
+                    decay: 0.008 + Math.random() * 0.015,
+                    rotation: Math.random() * 360,
+                    rotSpeed: (Math.random() - 0.5) * 10
+                });
+            }
+        }
+
+        function createExplosion(x, y) {
+            const colors = ['#8b0000', '#ff0000', '#daa520', '#ffd700', '#ff4444'];
+            for (let i = 0; i < 100; i++) {
+                const angle = Math.random() * Math.PI * 2;
+                const speed = Math.random() * 12 + 3;
+                particles.push({
+                    x: x, y: y,
+                    vx: Math.cos(angle) * speed,
+                    vy: Math.sin(angle) * speed,
+                    size: Math.random() * 5 + 1,
+                    color: colors[Math.floor(Math.random() * colors.length)],
+                    life: 1,
+                    decay: 0.01 + Math.random() * 0.02,
+                    rotation: 0, rotSpeed: 0
+                });
+            }
+        }
+
+        function animateConfetti() {
+            confettiCtx.clearRect(0, 0, confettiCanvas.width, confettiCanvas.height);
+            for (let i = particles.length - 1; i >= 0; i--) {
+                const p = particles[i];
+                p.x += p.vx;
+                p.y += p.vy;
+                p.vy += 0.15;
+                p.vx *= 0.99;
+                p.life -= p.decay;
+                p.rotation += p.rotSpeed;
+
+                if (p.life <= 0) {
+                    particles.splice(i, 1);
+                    continue;
+                }
+
+                confettiCtx.save();
+                confettiCtx.translate(p.x, p.y);
+                confettiCtx.rotate(p.rotation * Math.PI / 180);
+                confettiCtx.globalAlpha = p.life;
+                confettiCtx.fillStyle = p.color;
+                confettiCtx.fillRect(-p.size / 2, -p.size / 2, p.size, p.size);
+                confettiCtx.restore();
+            }
+            requestAnimationFrame(animateConfetti);
+        }
+        animateConfetti();
+
+        // ========================================
+        // ROSA MATEMÁTICA (FASE 2)
+        // ========================================
+        const rCanvas = document.getElementById('roseCanvas');
+        const rCtx = rCanvas.getContext('2d');
+        let roseAngle = 0;
+
+        function initRose() {
+            rCanvas.width = window.innerWidth;
+            rCanvas.height = window.innerHeight;
+        }
+
+        function drawRose(angle) {
+            // Rastro oscuro con desvanecimiento lento (efecto fantasmal)
+            rCtx.fillStyle = 'rgba(2,0,2,0.06)';
+            rCtx.fillRect(0, 0, rCanvas.width, rCanvas.height);
+
+            const cx = rCanvas.width / 2;
+            const cy = rCanvas.height / 2;
+            const pulse = 1 + Math.sin(angle * 8) * 0.08; // Respira
+            const baseSize = Math.min(cx, cy) * 0.65;
+
+            // === CAPA 1: Aura exterior difusa ===
+            rCtx.save();
+            rCtx.translate(cx, cy);
+            rCtx.rotate(angle * 0.3);
+            rCtx.lineWidth = 0.8;
+            rCtx.globalAlpha = 0.25;
+            rCtx.beginPath();
+            for (let i = 0; i < Math.PI * 20; i += 0.03) {
+                let r = baseSize * 1.15 * Math.sin(7 / 3 * i) * pulse;
+                if (r < 0) r = -r * 0.3;
+                let x = r * Math.cos(i);
+                let y = r * Math.sin(i);
+                rCtx.strokeStyle = `hsla(340, 80%, 12%, 0.6)`;
+                rCtx.lineTo(x, y);
+            }
+            rCtx.stroke();
+            rCtx.restore();
+
+            // === CAPA 2: Rosa gótica principal (7 pétalos) ===
+            rCtx.save();
+            rCtx.translate(cx, cy);
+            rCtx.rotate(angle);
+            rCtx.lineWidth = 2;
+            rCtx.globalAlpha = 0.9;
+            rCtx.shadowColor = 'rgba(180, 0, 0, 0.5)';
+            rCtx.shadowBlur = 15;
+            for (let i = 0; i < Math.PI * 20; i += 0.015) {
+                let r = baseSize * Math.sin(7 * i) * pulse;
+                if (r < 0) r = 0;
+                let x = r * Math.cos(i);
+                let y = r * Math.sin(i);
+
+                // Gradiente rojo-granate oscuro con destellos
+                let hue = 345 + Math.sin(i * 3 + angle * 5) * 12;
+                let light = 12 + Math.sin(i * 7 + angle * 10) * 8 + (r / baseSize) * 15;
+                let sat = 65 + Math.sin(i * 2) * 25;
+                rCtx.strokeStyle = `hsl(${hue}, ${sat}%, ${light}%)`;
+                rCtx.beginPath();
+                rCtx.moveTo(x, y);
+                let r2 = baseSize * Math.sin(7 * (i + 0.015)) * pulse;
+                if (r2 < 0) r2 = 0;
+                rCtx.lineTo(r2 * Math.cos(i + 0.015), r2 * Math.sin(i + 0.015));
+                rCtx.stroke();
+            }
+            rCtx.shadowBlur = 0;
+            rCtx.restore();
+
+            // === CAPA 3: Espinas/venas interiores (efecto gótico) ===
+            rCtx.save();
+            rCtx.translate(cx, cy);
+            rCtx.rotate(-angle * 0.5);
+            rCtx.lineWidth = 0.6;
+            rCtx.globalAlpha = 0.4;
+            for (let i = 0; i < Math.PI * 10; i += 0.04) {
+                let r = baseSize * 0.6 * Math.sin(13 * i) * pulse;
+                let x = r * Math.cos(i);
+                let y = r * Math.sin(i);
+                rCtx.strokeStyle = `hsla(350, 90%, 8%, 0.7)`;
+                rCtx.beginPath();
+                rCtx.moveTo(0, 0);
+                rCtx.lineTo(x, y);
+                rCtx.stroke();
+            }
+            rCtx.restore();
+
+            // === CENTRO: Brillo pulsante carmesí ===
+            rCtx.save();
+            rCtx.translate(cx, cy);
+            const glowSize = 40 * pulse;
+            const grad = rCtx.createRadialGradient(0, 0, 0, 0, 0, glowSize);
+            grad.addColorStop(0, `rgba(180, 0, 0, ${0.5 * pulse})`);
+            grad.addColorStop(0.4, 'rgba(100, 0, 0, 0.2)');
+            grad.addColorStop(1, 'rgba(50, 0, 0, 0)');
+            rCtx.fillStyle = grad;
+            rCtx.beginPath();
+            rCtx.arc(0, 0, glowSize, 0, Math.PI * 2);
+            rCtx.fill();
+            rCtx.restore();
+
+            // === PARTÍCULAS DE CHISPA alrededor ===
+            rCtx.save();
+            rCtx.translate(cx, cy);
+            for (let i = 0; i < 6; i++) {
+                let sparkAngle = angle * 3 + i * Math.PI / 3;
+                let dist = baseSize * 0.7 + Math.sin(angle * 5 + i) * 30;
+                let sx = dist * Math.cos(sparkAngle);
+                let sy = dist * Math.sin(sparkAngle);
+                let sparkSize = 2 + Math.sin(angle * 8 + i * 2) * 1.5;
+                rCtx.globalAlpha = 0.4 + Math.sin(angle * 6 + i) * 0.3;
+                rCtx.fillStyle = '#daa520';
+                rCtx.beginPath();
+                rCtx.arc(sx, sy, sparkSize, 0, Math.PI * 2);
+                rCtx.fill();
+            }
+            rCtx.restore();
+        }
+
+        function animateRose() {
+            if (!document.body.classList.contains('phase-2')) return;
+            roseAngle += 0.003;
+            drawRose(roseAngle);
+            requestAnimationFrame(animateRose);
+        }
+
+        // ========================================
+        // FOTOS CAYENDO (CICLO CONTINUO)
+        // ========================================
+        let photoDropInterval = null;
+
+        function startDroppingPhotos() {
+            const container = document.getElementById('photoContainer');
+            let index = 0;
+
+            function dropOne() {
+                const src = yourPhotos[index % yourPhotos.length];
+                index++;
+
+                const imgDiv = document.createElement('div');
+                imgDiv.className = 'falling-photo';
+                imgDiv.style.left = (Math.random() * 70 + 15) + '%';
+
+                const duration = Math.random() * 3000 + 5000;
+                const rot = (Math.random() - 0.5) * 50;
+
+                imgDiv.innerHTML = `<img src="${src}" alt="Recuerdo">`;
+                container.appendChild(imgDiv);
+
+                const anim = imgDiv.animate([
+                    { transform: 'translateY(0) rotate(0deg)', opacity: 0 },
+                    { transform: `translateY(80px) rotate(${rot / 3}deg)`, opacity: 1, offset: 0.08 },
+                    { transform: `translateY(${window.innerHeight + 250}px) rotate(${rot}deg)`, opacity: 0.8 }
+                ], {
+                    duration: duration,
+                    easing: 'ease-in',
+                    fill: 'forwards'
+                });
+
+                anim.onfinish = () => imgDiv.remove();
+            }
+
+            dropOne();
+            photoDropInterval = setInterval(dropOne, 1800);
+        }
+
+        // ========================================
+        // PÉTALOS DE ROSA CAYENDO
+        // ========================================
+        function startDroppingPetals() {
+            const container = document.getElementById('petalContainer');
+            const petals = ['🌹', '🥀', '🌹', '🥀', '🌹'];
+
+            function dropPetal() {
+                if (!document.body.classList.contains('phase-2')) return;
+
+                const petal = document.createElement('div');
+                petal.className = 'falling-petal';
+                petal.textContent = petals[Math.floor(Math.random() * petals.length)];
+                petal.style.left = (Math.random() * 100) + '%';
+                petal.style.fontSize = (Math.random() * 1.2 + 1) + 'rem';
+
+                container.appendChild(petal);
+
+                const duration = Math.random() * 4000 + 5000;
+                const swayX = (Math.random() - 0.5) * 200;
+                const rot = (Math.random() - 0.5) * 360;
+
+                const anim = petal.animate([
+                    { transform: 'translateY(0) translateX(0) rotate(0deg)', opacity: 0 },
+                    { transform: `translateY(60px) translateX(${swayX / 3}px) rotate(${rot / 4}deg)`, opacity: 0.8, offset: 0.1 },
+                    { transform: `translateY(${window.innerHeight / 2}px) translateX(${swayX}px) rotate(${rot / 2}deg)`, opacity: 0.6, offset: 0.6 },
+                    { transform: `translateY(${window.innerHeight + 50}px) translateX(${swayX * 1.2}px) rotate(${rot}deg)`, opacity: 0 }
+                ], {
+                    duration: duration,
+                    easing: 'ease-in-out',
+                    fill: 'forwards'
+                });
+
+                anim.onfinish = () => petal.remove();
+            }
+
+            setInterval(dropPetal, 600);
+        }
+
+        // ========================================
+        // LLUVIA DE STICKERS (ELIMINADA)
+        // ========================================
+        /* 
+        function startDroppingStickers() { ... } 
+        */
+
+        // ========================================
+        // FASE 3: CORAZÓN 3D CON 2500 PARTÍCULAS
+        // ========================================
+        const heartCanvas = document.getElementById('heartCanvas');
+        const heartCtx = heartCanvas.getContext('2d');
+        let heartParticles = [];
+        let heartAngleY = 0;
+        let heartBeat = 0;
+
+        function initHeart3D() {
+            heartCanvas.width = window.innerWidth;
+            heartCanvas.height = window.innerHeight;
+
+            heartParticles = [];
+
+            // Generar ~300 puntos sobre la superficie de un corazón 3D (SÚPER OPTIMIZADO)
+            for (let i = 0; i < 300; i++) {
+                // Coordenadas paramétricas del corazón
+                const u = Math.random() * Math.PI * 2;
+                const v = Math.random() * Math.PI;
+
+                // Ecuación paramétrica del corazón 3D
+                const sinU = Math.sin(u);
+                const cosU = Math.cos(u);
+                const sinV = Math.sin(v);
+                const cosV = Math.cos(v);
+
+                const scale = 8;
+
+                const x = scale * (16 * sinU * sinU * sinU) * sinV;
+                const y = -scale * (13 * cosU - 5 * Math.cos(2 * u) - 2 * Math.cos(3 * u) - Math.cos(4 * u)) * sinV;
+                const z = scale * (16 * sinU * sinU * sinU) * cosV * 0.3;
+
+                // Color variado rojo
+                const hue = 350 + Math.random() * 15;
+                const light = 20 + Math.random() * 35;
+                const sat = 70 + Math.random() * 30;
+
+                heartParticles.push({
+                    x: x,
+                    y: y,
+                    z: z,
+                    baseX: x,
+                    baseY: y,
+                    baseZ: z,
+                    size: Math.random() * 2.5 + 1,
+                    color: `hsl(${hue}, ${sat}%, ${light}%)`,
+                    hue: hue,
+                    light: light
+                });
+            }
+        }
+
+        function animateHeart3D() {
+            if (!document.body.classList.contains('phase-3')) return;
+
+            heartCtx.fillStyle = 'rgba(2,0,2,0.15)';
+            heartCtx.fillRect(0, 0, heartCanvas.width, heartCanvas.height);
+
+            heartAngleY += 0.008;
+            heartBeat += 0.04;
+
+            // LATIDO GÓTICO: Doble golpe fuerte (tutum... tutum...)
+            // Usamos una combinación de senos para simular sístole/diástole
+            const cycle = heartBeat % (Math.PI * 2);
+            let beat = 0;
+            if (cycle < 0.4) beat = Math.sin(cycle * 10) * 0.15;
+            else if (cycle > 0.6 && cycle < 1.0) beat = Math.sin((cycle - 0.6) * 10) * 0.08;
+
+            const beatScale = 1 + Math.max(0, beat);
+            // Definir cosA y sinA que faltaban
+            const cosA = Math.cos(heartAngleY);
+            const sinA = Math.sin(heartAngleY);
+
+            // Variación de color pulsante (rojo sangre a casi negro)
+            const pulseRed = 150 + Math.sin(heartBeat * 4) * 50;
+
+            const cx = heartCanvas.width / 2;
+            const cy = heartCanvas.height / 2 + 20;
+            const focalLength = 400;
+
+            // Ordenar por Z para profundidad (z-sorting)
+            const sorted = heartParticles.map(p => {
+                const sx = p.baseX * beatScale;
+                const sy = p.baseY * beatScale;
+                const sz = p.baseZ * beatScale;
+
+                // Rotación en Y
+                const rx = sx * cosA + sz * sinA;
+                const rz = -sx * sinA + sz * cosA;
+                const ry = sy;
+
+                return { ...p, rx, ry, rz };
+            });
+
+            sorted.sort((a, b) => a.rz - b.rz);
+
+            sorted.forEach(p => {
+                const perspective = focalLength / (focalLength + p.rz + 200);
+                const screenX = cx + p.rx * perspective;
+                const screenY = cy + p.ry * perspective;
+                const size = p.size * perspective;
+
+                // Brillo y Color Gótico Pulsante
+                const depthBrightness = Math.max(0.3, Math.min(1, (p.rz + 200) / 400));
+
+                // Color dinámico: rojo sangre pulsante
+                // pulseRed va de 100 a 200 aprox
+                const finalLight = pulseRed * 0.15 + p.light * 0.4;
+
+                heartCtx.globalAlpha = 0.6 + depthBrightness * 0.4;
+                heartCtx.fillStyle = `hsl(${p.hue}, 85%, ${finalLight}%)`;
+
+                heartCtx.beginPath();
+                heartCtx.arc(screenX, screenY, size, 0, Math.PI * 2);
+                heartCtx.fill();
+            });
+
+            heartCtx.globalAlpha = 1;
+            requestAnimationFrame(animateHeart3D);
+        }
+
+        // ========================================
+        // 🎵 MELODÍA ROMÁNTICA (CAJA DE MÚSICA)
+        // ========================================
+        let audioCtx = null;
+        function startMelody() {
+            if (audioCtx) return;
+            audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+            // Progresión más dulce y romántica
+            const melody = [
+                { f: 329.63, d: 0.6 }, { f: 392.00, d: 0.6 }, { f: 523.25, d: 1.2 },
+                { f: 493.88, d: 0.6 }, { f: 392.00, d: 0.6 }, { f: 329.63, d: 1.2 },
+                { f: 349.23, d: 0.6 }, { f: 440.00, d: 0.6 }, { f: 523.25, d: 1.2 },
+                { f: 392.00, d: 0.6 }, { f: 329.63, d: 0.6 }, { f: 261.63, d: 1.2 }
+            ];
+
+            let time = audioCtx.currentTime + 0.1;
+
+            function playNote(freq, start, duration) {
+                // Sintetizador estilo "Caja de Música" (Sine + Triangle + Filtro)
+                const osc1 = audioCtx.createOscillator();
+                const osc2 = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                const filter = audioCtx.createBiquadFilter();
+
+                osc1.type = 'sine';
+                osc2.type = 'triangle';
+                osc1.frequency.setValueAtTime(freq, start);
+                osc2.frequency.setValueAtTime(freq * 2.005, start); // Armónico sutil
+
+                filter.type = 'lowpass';
+                filter.frequency.setValueAtTime(2000, start);
+                filter.frequency.exponentialRampToValueAtTime(500, start + duration);
+
+                gain.gain.setValueAtTime(0, start);
+                gain.gain.linearRampToValueAtTime(0.12, start + 0.05);
+                gain.gain.exponentialRampToValueAtTime(0.001, start + duration);
+
+                osc1.connect(filter);
+                osc2.connect(filter);
+                filter.connect(gain);
+                gain.connect(audioCtx.destination);
+
+                osc1.start(start);
+                osc2.start(start);
+                osc1.stop(start + duration);
+                osc2.stop(start + duration);
+            }
+
+            function sequence() {
+                let noteTime = time;
+                melody.forEach(note => {
+                    playNote(note.f, noteTime, note.d * 1.5);
+                    noteTime += note.d * 1.5;
+                });
+                time = noteTime + 1.0;
+                setTimeout(sequence, (noteTime - audioCtx.currentTime) * 1000 + 2000);
+            }
+            sequence();
+        }
+
+        // ========================================
+        // ✨ CURSOR DE AMOR (TRAILS)
+        // ========================================
+        document.addEventListener('mousemove', (e) => {
+            if (Math.random() > 0.15) return; // Limitar frecuencia
+
+            const heart = document.createElement('div');
+            heart.innerHTML = '❤️';
+            heart.style.position = 'fixed';
+            heart.style.left = e.clientX + 'px';
+            heart.style.top = e.clientY + 'px';
+            heart.style.fontSize = (Math.random() * 10 + 10) + 'px';
+            heart.style.pointerEvents = 'none';
+            heart.style.zIndex = '1000';
+            heart.style.opacity = '0.8';
+            heart.style.transition = 'all 1.5s ease-out';
+            document.body.appendChild(heart);
+
+            requestAnimationFrame(() => {
+                heart.style.transform = `translate(${(Math.random() - 0.5) * 100}px, ${(Math.random() - 0.5) * 100}px) scale(0)`;
+                heart.style.opacity = '0';
+            });
+
+            setTimeout(() => heart.remove(), 1500);
+        });
+
+        // ========================================
+        // 🌌 BRILLOS DE FONDO (SPARKLES)
+        // ========================================
+        function createSparkle() {
+            const sparkle = document.createElement('div');
+            sparkle.style.position = 'fixed';
+            sparkle.style.left = Math.random() * 100 + 'vw';
+            sparkle.style.top = Math.random() * 100 + 'vh';
+            sparkle.style.width = '2px';
+            sparkle.style.height = '2px';
+            sparkle.style.backgroundColor = '#fff';
+            sparkle.style.borderRadius = '50%';
+            sparkle.style.boxShadow = '0 0 5px #fff, 0 0 10px #ffd700';
+            sparkle.style.pointerEvents = 'none';
+            sparkle.style.zIndex = '1';
+            sparkle.style.opacity = '0';
+            sparkle.style.animation = `twinkle ${Math.random() * 3 + 2}s infinite`;
+            document.body.appendChild(sparkle);
+
+            setTimeout(() => sparkle.remove(), 5000);
+        }
+        setInterval(createSparkle, 300);
+
+        // ========================================
+        // RESIZE HANDLER
+        // ========================================
+        window.addEventListener('resize', () => {
+            confettiCanvas.width = window.innerWidth;
+            confettiCanvas.height = window.innerHeight;
+            if (document.body.classList.contains('phase-2')) {
+                rCanvas.width = window.innerWidth;
+                rCanvas.height = window.innerHeight;
+            }
+            if (document.body.classList.contains('phase-3')) {
+                heartCanvas.width = window.innerWidth;
+                heartCanvas.height = window.innerHeight;
+            }
+        });
+    </script>
+</body>
+
+</html>
